@@ -1,0 +1,76 @@
+#
+# Normal rules
+#
+.vscode/*
+*.DS_Store
+.*
+*.o
+*.o.*
+*.a
+*.s
+*.ko
+*.so
+*.so.dbg
+*.mod.c
+*.i
+*.lst
+*.symtypes
+*.order
+modules.builtin
+*.elf
+*.bin
+*.gz
+*.bz2
+*.lzma
+*.xz
+*.lzo
+*.patch
+*.gcno
+*.mod*
+
+#
+# Top-level generic files
+#
+linux-5.4.70/tags
+linux-5.4.70/TAGS
+linux-5.4.70/linux
+linux-5.4.70/vmlinux
+linux-5.4.70/vmlinuz
+linux-5.4.70/System.map
+linux-5.4.70/Module.markers
+linux-5.4.70/Module.symvers
+
+#
+# git files that we don't want to ignore even it they are dot-files
+#
+!.gitignore
+!.mailmap
+
+#
+# Generated include files
+#
+linux-5.4.70/include/config
+linux-5.4.70/include/linux/version.h
+linux-5.4.70/include/generated
+linux-5.4.70/arch/*/include/generated
+
+# stgit generated dirs
+patches-*
+
+# quilt's files
+patches
+series
+
+# cscope files
+cscope.*
+ncscope.*
+
+# gnu global files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+
+*.orig
+*~
+\#*#

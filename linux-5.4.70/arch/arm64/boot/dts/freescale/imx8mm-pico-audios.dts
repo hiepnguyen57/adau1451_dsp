@@ -1,0 +1,185 @@
+/*
+ * Copyright 2020 Audios Inc
+ *
+ * Author: Erik Young <erik.young@audios.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include "imx8mm-pico.dtsi"
+
+/ {
+        model = "TechNexion PICO-IMX8MM and AUDIOS baseboard";
+        compatible = "fsl,imx8mm-pico", "fsl,imx8mm";
+
+        /* CODEC DAI driver */
+        wm8524: wm8524 {
+            pinctrl-names = "default";
+            pinctrl-0 = <&pinctrl_wm8524_mute>;
+            compatible = "wlf,wm8524";
+            clocks = <&clk IMX8MM_CLK_SAI2_ROOT>;
+            clock-names = "mclk";
+            wlf,mute-gpios = <&gpio3 6 GPIO_ACTIVE_LOW>; 
+        };
+
+        /* DAI Link driver */
+        sound-wm8524 {
+            compatible = "fsl,imx-audio-wm8524";
+            model = "wm8524-audio";
+            audio-cpu = <&sai2>;
+            audio-codec = <&wm8524>;
+            audio-routing =
+            "Line Out Jack", "LINEVOUTL",
+            "Line Out Jack", "LINEVOUTR";
+        };
+
+};
+
+&iomuxc {
+        pinctrl_pcie0: pcie0grp {
+            fsl,pins = <
+                MX8MM_IOMUXC_I2C4_SCL_GPIO5_IO20    0x41     /* PCIE_nReset */
+                MX8MM_IOMUXC_NAND_DATA02_GPIO3_IO8  0x41     /* EXT_WIFI_REG_ON - E1 Pin 32 */
+                MX8MM_IOMUXC_SAI3_RXFS_GPIO4_IO28   0x150    /* Clk Request */
+                MX8MM_IOMUXC_I2C4_SDA_GPIO5_IO21    0x41     /* GPIO E1 Pin 48 */
+                MX8MM_IOMUXC_NAND_DATA01_GPIO3_IO7  0x41     /* EXT_BT_REG_ON - E1 Pin 30 */
+            >;
+        };
+
+        pinctrl_wm8524_mute: wm8524mutegrp {
+            fsl,pins = <
+                MX8MM_IOMUXC_NAND_DATA00_GPIO3_IO6            0x41   /* Temp Pin for Generic sound driver. Remove later */ 
+            >;
+        };    
+
+        pinctrl_adau1451_irq: adau1451_grp {
+                fsl,pins = <
+                        MX8MM_IOMUXC_NAND_ALE_GPIO3_IO0       0x19   /* DSP IRQ - E1 Pin 25 */
+                >;
+        };
+
+        pinctrl_ctrl_mcu_irq: ctrl_mcu_grp {
+                fsl,pins = <
+                        MX8MM_IOMUXC_NAND_CE0_B_GPIO3_IO1     0x19   /* CTRL IRQ - E1 Pin 24 */
+                >;
+        };
+
+        pinctrl_health_mcu_irq: health_mcu_grp {
+                fsl,pins = <
+                        MX8MM_IOMUXC_NAND_READY_B_GPIO3_IO16  0x19   /* HEALTH IRQ - E1 Pin 26 */
+                >;
+        };
+
+        pinctrl_spare1_dsp_gpio: spare1_dsp_gpio_grp {                       
+                fsl,pins = <                                         /* Spare GPIO from DSP */
+                        MX8MM_IOMUXC_GPIO1_IO06_GPIO1_IO6     0x19   /* DSP GPIO - X1 Pin 51 */
+                >;
+        };
+
+        pinctrl_spare2_sp_gpio: spare2_dsp_gpio_grp {                       
+                fsl,pins = <                                         /* Spare GPIO from DSP */
+                        MX8MM_IOMUXC_GPIO1_IO07_GPIO1_IO7     0x19   /* DSP GPIO - X1 Pin 6 */
+                >;
+        };
+
+        pinctrl_ps_mcu_shutdown_irq: ps_mcuq_shutdown_grp {
+            fsl,pins = <
+                MX8MM_IOMUXC_GPIO1_IO01_GPIO1_IO1             0x19   /* Power IRQ - E1 Pin 38 */
+            >;
+        };
+
+        /*pinctrl_health_shutdown_irq: health_shutdown_grp {
+            fsl,pins = <
+                MX8MM_IOMUXC_NAND_DATA00_GPIO3_IO6            0x19   / HEALTH SHUTDOWN IRQ - E1 Pin 28 /
+            >;
+        };*/
+};
+
+&pcie0 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_pcie0>;
+        reset-gpio   = <&gpio5 20 GPIO_ACTIVE_LOW>;
+        disable-gpio = <&gpio3  8 GPIO_ACTIVE_LOW>;
+        clkreq-gpio  = <&gpio4 28 GPIO_ACTIVE_LOW>;
+/*       wake-gpio    = <&gpio5 21 GPIO_ACTIVE_LOW>; */
+        ext_osc = <1>;
+        status = "okay";
+};
+
+&i2c3 {
+        status = "okay";
+
+        dsp: adau1451@76 {
+            compatible = "syscon", "simple-mfd";
+            pinctrl-names = "default";
+            pinctrl-0 = <&pinctrl_adau1451_irq>;
+            interrupt-parent = <&gpio3>;        
+            interrupts = <0 IRQ_TYPE_LEVEL_LOW>;
+            reg = <0x76>;
+            /*wakeup-source;*/
+        };
+
+        ctrl_mcu: ctrlmcu@40 {
+            compatible = "syscon", "simple-mfd"; 
+            pinctrl-names = "default";
+            pinctrl-0 = <&pinctrl_ctrl_mcu_irq>;
+            interrupt-parent = <&gpio3>;            
+            interrupts = <1 IRQ_TYPE_LEVEL_LOW>;
+            reg = <0x40>;
+            /*wakeup-source;*/
+        };
+
+        health_mcu: healthmcu@42 {
+            compatible = "syscon", "simple-mfd";
+            pinctrl-names = "default";
+            pinctrl-0 = <&pinctrl_health_mcu_irq>;
+            interrupt-parent = <&gpio3>;
+            interrupts = <16 IRQ_TYPE_LEVEL_LOW>;
+            reg = <0x42>;
+        };
+
+        sys_eeprom: sys_eeprom@50 {
+            compatible = "syscon", "simple-mfd"; /* EEProm Driver need */
+            reg = <0x50>;
+        }; 
+
+        oled: oled@3c {
+            /* compatible = "fsl,imx8mm-lcdif"; */
+            compatible = "syscon", "simple-mfd";
+            reg = <0x3c>;
+            /* interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
+            clocks = <&clks IMX6SX_CLK_LCDIF1_PIX>,
+                     <&clks IMX6SX_CLK_LCDIF_APB>,
+                     <&clks IMX6SX_CLK_DISPLAY_AXI>;
+            clock-names = "pix", "axi", "disp_axi";
+
+            port {
+                endpoint {
+                    remote-endpoint = <&panel_in>;
+                };
+            };*/
+        };   
+};
+
+&sai2 {
+        status = "okay";
+};
+
+&pwm4 {
+        status = "disabled";
+};
+
+&pwm1 {
+        status = "disabled";
+};

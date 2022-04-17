@@ -1,0 +1,67 @@
+/*
+* Copyright 2020 Audink Inc.
+ * Copyright 2020 Audios
+ *
+ * Author: Erik Young <erik.young@audios.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include "imx8mm-pico.dtsi"
+
+/ {
+        model = "TechNexion PICO-IMX8MM and AUDIOS baseboard";
+        compatible = "fsl,imx8mm-pico", "fsl,imx8mm";
+
+        /* CODEC DAI driver */
+        wm8524: wm8524 {
+            pinctrl-names = "default";
+            pinctrl-0 = <&pinctrl_wm8524_mute>;
+            compatible = "wlf,wm8524";
+            clocks = <&clk IMX8MM_CLK_SAI2_ROOT>;
+            clock-names = "mclk";
+            wlf,mute-gpios = <&gpio3 16 GPIO_ACTIVE_LOW>;
+        };
+
+        /* DAI Link driver */
+        sound-wm8524 {
+            compatible = "fsl,imx-audio-wm8524";
+            model = "wm8524-audio";
+            audio-cpu = <&sai2>;
+            audio-codec = <&wm8524>;
+            audio-routing =
+            "Line Out Jack", "LINEVOUTL",
+            "Line Out Jack", "LINEVOUTR";
+        };
+};
+
+&iomuxc {
+        pinctrl_wm8524_mute: wm8524mutegrp {
+            fsl,pins = <
+                MX8MM_IOMUXC_NAND_READY_B_GPIO3_IO16    0xd6
+            >;
+        };
+};
+
+&sai2 {
+        status = "okay";
+}; 
+
+&pwm4 {
+        status = "disabled";
+};
+
+&pwm1 {
+        status = "disabled";
+};
