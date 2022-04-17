@@ -1,0 +1,17 @@
+
+{
+    // Set default container specific settings.json values on container create.
+	"settings": {},
+
+    // Add the IDs of extensions you want installed when the container is created
+	"extensions": [],
+
+	// Build settings
+	"build": {
+		"dockerfile": "../docker/Dockerfile",
+		"args": {
+			"VARIANT": "3.14"
+		}
+	},
+	"remoteUser": "root",
+}
